@@ -30,23 +30,18 @@
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
   }
   .wrap { max-width: 780px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: 0 16px; }
   header { padding: 22px 4px 10px; border-bottom: 1px solid var(--line); }
-  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
   h1 span { color: var(--accent); }
   .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  .lang { border: 1px solid var(--line); background: var(--panel); color: var(--muted);
-          border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 12px; }
-  .lang:hover { color: var(--ink); }
   main { flex: 1; padding: 16px 0; display: flex; flex-direction: column; gap: 14px; }
   .msg { padding: 12px 14px; border-radius: 12px; max-width: 90%; white-space: pre-wrap; word-wrap: break-word; }
   .msg.user { background: var(--user); align-self: flex-end; }
   .msg.bot { background: var(--panel); border: 1px solid var(--line); align-self: flex-start; }
   .msg.bot.think { color: var(--muted); font-style: italic; }
-  .hint { color: var(--muted); font-size: 13px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
   .chip { border: 1px solid var(--line); background: var(--accent-soft); color: var(--accent);
           border-radius: 999px; padding: 6px 12px; font-size: 12.5px; cursor: pointer; }
@@ -65,73 +60,39 @@
 <body>
   <div class="wrap">
     <header>
-      <div class="row">
-        <h1><span>Quant</span> Assistant</h1>
-        <button class="lang" id="lang" type="button">中文</button>
-      </div>
-      <div class="sub" id="sub">Claude-powered RAG + tool-calling research assistant. Answers are grounded in indexed notes and data.</div>
+      <h1><span>Quant</span> Assistant</h1>
+      <div class="sub">Claude-powered RAG + tool-calling research assistant. Answers are grounded in indexed notes and data.</div>
     </header>
     <main id="log">
-      <div class="msg bot" id="welcome">Ask a question about the indexed research notes or the sample dataset. Try one of these:</div>
+      <div class="msg bot">Ask a question about the indexed research notes or the sample dataset. Try one of these:</div>
       <div class="chips" id="chips"></div>
     </main>
     <form id="form">
       <input type="text" id="q" autocomplete="off" placeholder="Ask about the data or the notes…" />
       <button class="send" id="send" type="submit">Send</button>
     </form>
-    <footer id="foot">Independent project by Yuhang Guo. Sample data is synthetic and for demonstration only.</footer>
+    <footer>Independent project by Yuhang Guo. Sample data is synthetic and for demonstration only.</footer>
   </div>
 
 <script>
-  const T = {
-    en: {
-      sub: "Claude-powered RAG + tool-calling research assistant. Answers are grounded in indexed notes and data.",
-      welcome: "Ask a question about the indexed research notes or the sample dataset. Try one of these:",
-      placeholder: "Ask about the data or the notes…",
-      send: "Send", thinking: "Thinking and calling tools…", langBtn: "中文",
-      foot: "Independent project by Yuhang Guo. Sample data is synthetic and for demonstration only.",
-      chips: [
-        "How volatile has ACME been recently?",
-        "What do the notes say about momentum vs mean reversion?",
-        "Summarize a backtest for these monthly returns: 0.02, -0.01, 0.03, 0.00, -0.02, 0.04",
-      ],
-      err: "Something went wrong. Is the server running and the index built?",
-    },
-    zh: {
-      sub: "基于 Claude 的 RAG + 工具调用研究助手。回答均以已索引的笔记与数据为依据。",
-      welcome: "就已索引的研究笔记或示例数据集提问。可以试试:",
-      placeholder: "问一问数据或笔记……",
-      send: "发送", thinking: "正在思考并调用工具……", langBtn: "EN",
-      foot: "郭宇航的独立项目。示例数据为合成数据,仅用于演示。",
-      chips: [
-        "ACME 最近的波动率有多大?",
-        "笔记里关于动量与均值回归怎么说?",
-        "帮我总结这组月度收益的回测:0.02, -0.01, 0.03, 0.00, -0.02, 0.04",
-      ],
-      err: "出错了。服务器是否在运行、索引是否已构建?",
-    },
-  };
-  let lang = "en";
+  const THINKING = "Thinking and calling tools…";
+  const ERR = "Something went wrong. Is the server running and the index built?";
+  const CHIPS = [
+    "How volatile has ACME been recently?",
+    "What do the notes say about momentum vs mean reversion?",
+    "Summarize a backtest for these monthly returns: 0.02, -0.01, 0.03, 0.00, -0.02, 0.04",
+  ];
   const $ = (id) => document.getElementById(id);
 
-  function applyLang() {
-    const t = T[lang];
-    $("sub").textContent = t.sub;
-    $("welcome").textContent = t.welcome;
-    $("q").placeholder = t.placeholder;
-    $("send").textContent = t.send;
-    $("lang").textContent = t.langBtn;
-    $("foot").textContent = t.foot;
+  (function renderChips() {
     const chips = $("chips");
-    chips.innerHTML = "";
-    t.chips.forEach((c) => {
+    CHIPS.forEach((c) => {
       const el = document.createElement("button");
       el.type = "button"; el.className = "chip"; el.textContent = c;
       el.onclick = () => { $("q").value = c; $("q").focus(); };
       chips.appendChild(el);
     });
-  }
-  $("lang").onclick = () => { lang = lang === "en" ? "zh" : "en"; applyLang(); };
+  })();
 
   function addMsg(text, cls) {
     const el = document.createElement("div");
@@ -149,7 +110,7 @@
     addMsg(q, "user");
     $("q").value = "";
     $("send").disabled = true;
-    const thinking = addMsg(T[lang].thinking, "bot think");
+    const thinking = addMsg(THINKING, "bot think");
     try {
       const res = await fetch("/api/ask", {
         method: "POST",
@@ -158,17 +119,15 @@
       });
       const data = await res.json();
       thinking.remove();
-      addMsg(res.ok ? data.answer : (data.detail || T[lang].err), "bot");
+      addMsg(res.ok ? data.answer : (data.detail || ERR), "bot");
     } catch (err) {
       thinking.remove();
-      addMsg(T[lang].err, "bot");
+      addMsg(ERR, "bot");
     } finally {
       $("send").disabled = false;
       $("q").focus();
     }
   };
-
-  applyLang();
 </script>
 </body>
 </html>
