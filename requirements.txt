@@ -1,0 +1,19 @@
+# Core
+anthropic>=0.40
+numpy>=1.24
+pandas>=2.0
+
+# Web app
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.0
+python-dotenv>=1.0
+
+# Optional embedding backends (uncomment one for real dense embeddings):
+#   Voyage AI (Anthropic's recommended provider; set VOYAGE_API_KEY)
+# voyageai>=0.2
+#   Local transformer embeddings (no API key, downloads a model on first use)
+# sentence-transformers>=2.2
+
+# Tests
+pytest>=7.0
