@@ -1,0 +1,11 @@
+.git
+.gitignore
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+index.pkl
+Dockerfile
+.dockerignore

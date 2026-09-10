@@ -1,5 +1,7 @@
 # Quant Assistant
 
+[![CI](https://github.com/yuhangYH/quant-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/yuhangYH/quant-assistant/actions/workflows/ci.yml)
+
 A small but real research assistant that answers analytical questions over market
 data and research notes. It combines **retrieval-augmented generation (RAG)** with a
 **tool-calling agent loop** on top of Claude, and ships with a command-line interface
@@ -84,6 +86,24 @@ Run the offline tests (no API key or model download needed):
 pip install pytest
 EMBEDDINGS_BACKEND=hashing pytest -q
 ```
+
+## Run with Docker
+
+The image bakes a retrieval index from the bundled sample data at build time (using the
+dependency-free hashing backend, so no secret is needed to build), then serves the FastAPI
+app. A Claude API key is only needed at run time for the `/api/ask` endpoint.
+
+```bash
+docker build -t quant-assistant .
+docker run --rm -p 8000:8000 -e ANTHROPIC_API_KEY=sk-... quant-assistant
+# open http://127.0.0.1:8000
+```
+
+## Continuous integration
+
+Every push and pull request to `main` runs the test suite on Python 3.10, 3.11, and 3.12
+via [GitHub Actions](.github/workflows/ci.yml). The workflow forces the hashing embedding
+backend, so CI needs no API key.
 
 ## Configuration
 
